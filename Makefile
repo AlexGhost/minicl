@@ -1,6 +1,6 @@
 all : fclean
-	clang -Llibft -lft -framework OpenCL aveccl.c -o aveccl
-	clang -Llibft -lft sanscl.c -o sanscl
+	gcc -Llibft -lft -framework OpenCL aveccl.c -o aveccl
+	gcc -Llibft -lft sanscl.c -o sanscl
 
 fclean :
 	rm -rf aveccl
