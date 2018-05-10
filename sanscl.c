@@ -6,7 +6,7 @@
 /*   By: acourtin <acourtin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/05/01 16:26:56 by acourtin          #+#    #+#             */
-/*   Updated: 2018/05/10 20:00:22 by acourtin         ###   ########.fr       */
+/*   Updated: 2018/05/10 21:34:40 by acourtin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,7 @@ void					add42(double *av, double *ap)
 
 	while (i < 100000000)
 	{
-		*ap = atan(*av);
+		*ap = atan(*av) * atan(*av);
 		i++;
 	}
 }
