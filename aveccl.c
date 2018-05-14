@@ -6,7 +6,7 @@
 /*   By: acourtin <acourtin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/05/01 15:29:46 by acourtin          #+#    #+#             */
-/*   Updated: 2018/05/14 16:56:14 by acourtin         ###   ########.fr       */
+/*   Updated: 2018/05/14 17:34:39 by acourtin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,6 +29,7 @@ typedef struct	s_cl
 
 typedef struct	s_program
 {
+	int			source_size;
 	cl_mem		input;
 	cl_mem		output;
 	cl_program	program;
@@ -39,11 +40,10 @@ typedef struct	s_program
 // code du kernel
 int main (int argc, char **argv)
 {
-	int			i;
 	t_cl		gpu;
 	t_program	prog;
 
-	if (!(prog.source = readcl("script.cl", &i)))
+	if (!(prog.source = readcl("script.cl", &prog.source_size)))
 		return (0);
 
 	// creer un contexte
@@ -64,7 +64,7 @@ int main (int argc, char **argv)
 		sizeof (double), 0, 0);
 
 	// charger et compiler le kernel ; i correspond aux lignes compris dans le script
-	prog.program = clCreateProgramWithSource (gpu.context, i,
+	prog.program = clCreateProgramWithSource (gpu.context, prog.source_size,
 		(const char**)prog.source, 0, 0);
 	clBuildProgram (prog.program, 0, NULL, NULL, NULL, NULL);
 	prog.kernel = clCreateKernel (prog.program, "alexatan", NULL);
