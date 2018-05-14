@@ -6,7 +6,7 @@
 /*   By: acourtin <acourtin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/05/14 14:56:16 by acourtin          #+#    #+#             */
-/*   Updated: 2018/05/14 15:39:47 by acourtin         ###   ########.fr       */
+/*   Updated: 2018/05/14 17:46:08 by acourtin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,7 +16,7 @@
 
 char	**readcl(char *source, int *i)
 {
-	char	**kernelSource;
+	char	**kernel_source;
 	int		fd;
 	char	*line;
 	int		j;
@@ -28,16 +28,16 @@ char	**readcl(char *source, int *i)
 	else
 		ft_putendl("Echec de lecture : 1");
 	close(fd);
-	if (!(kernelSource = ft_memalloc(sizeof(char *) * (j + 1))))
+	if (!(kernel_source = ft_memalloc(sizeof(char *) * (j + 1))))
 		return (NULL);
 	j = 0;
 	if ((fd = open(source, O_RDONLY)) > 0)
-		while (get_next_line(fd, &kernelSource[j]) == 1)
+		while (get_next_line(fd, &kernel_source[j]) == 1)
 			j++;
 	else
 		ft_putendl("Echec de lecture : 2");
 	*i = j;
-	ft_strdel(&kernelSource[j]);
-	close (fd);
-	return (kernelSource);
+	ft_strdel(&kernel_source[j]);
+	close(fd);
+	return (kernel_source);
 }

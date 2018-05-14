@@ -6,7 +6,7 @@
 /*   By: acourtin <acourtin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/05/01 15:29:46 by acourtin          #+#    #+#             */
-/*   Updated: 2018/05/14 17:34:39 by acourtin         ###   ########.fr       */
+/*   Updated: 2018/05/14 17:44:55 by acourtin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,8 +30,7 @@ typedef struct	s_cl
 typedef struct	s_program
 {
 	int			source_size;
-	cl_mem		input;
-	cl_mem		output;
+	cl_mem		*buffers;
 	cl_program	program;
 	cl_kernel	kernel;
 	char		**source;
@@ -58,9 +57,11 @@ int main (int argc, char **argv)
 	double		av;
 	double		ap;
 	av = 42.f;
-	prog.input = clCreateBuffer (gpu.context, CL_MEM_READ_ONLY |
+	if (!(prog.buffers = ft_memalloc(sizeof(cl_mem) * 2)))
+		return (0);
+	prog.buffers[0] = clCreateBuffer (gpu.context, CL_MEM_READ_ONLY |
 		CL_MEM_COPY_HOST_PTR, sizeof(double), &av, 0);
-	prog.output = clCreateBuffer (gpu.context, CL_MEM_WRITE_ONLY,
+	prog.buffers[1] = clCreateBuffer (gpu.context, CL_MEM_WRITE_ONLY,
 		sizeof (double), 0, 0);
 
 	// charger et compiler le kernel ; i correspond aux lignes compris dans le script
@@ -73,27 +74,28 @@ int main (int argc, char **argv)
 		printf("!!! Erreur compilation du script OpenCL !!!\n");
 		exit(0);
 	}
-	clSetKernelArg (prog.kernel, 0, sizeof (cl_mem), (void *) &prog.input);
-	clSetKernelArg (prog.kernel, 1, sizeof (cl_mem), (void *) &prog.output);
+	clSetKernelArg (prog.kernel, 0, sizeof (cl_mem), (void *) &prog.buffers[0]);
+	clSetKernelArg (prog.kernel, 1, sizeof (cl_mem), (void *) &prog.buffers[1]);
 
 	// ajouter le kernel dans la file de commandes
 	size_t WorkSize[1] = { 1 };
 	clEnqueueNDRangeKernel (gpu.queue, prog.kernel, 1, 0, WorkSize, 0, 0, 0, 0);
 
 	// recuperer les donnees calculees dans la memoire du device
-	clEnqueueReadBuffer (gpu.queue, prog.output, CL_TRUE, 0, \
+	clEnqueueReadBuffer (gpu.queue, prog.buffers[1], CL_TRUE, 0, \
 		sizeof (double), &ap, 0, NULL, NULL);
 
 	// liberer les ressources
 	clReleaseKernel (prog.kernel);
 	clReleaseProgram (prog.program);
 	clReleaseCommandQueue (gpu.queue);
-	clReleaseMemObject (prog.input);
-	clReleaseMemObject (prog.output);
+	clReleaseMemObject (prog.buffers[0]);
+	clReleaseMemObject (prog.buffers[1]);
 	clReleaseContext (gpu.context);
 
 	printf("aveccl :\tavant = %f\taprès = %f\n", av, ap);
 	free(prog.source);
+	free(prog.buffers);
 	exit(0);
 	return (0);
 }
