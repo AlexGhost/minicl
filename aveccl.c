@@ -6,7 +6,7 @@
 /*   By: acourtin <acourtin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/05/01 15:29:46 by acourtin          #+#    #+#             */
-/*   Updated: 2018/05/14 16:39:11 by acourtin         ###   ########.fr       */
+/*   Updated: 2018/05/14 16:44:40 by acourtin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,7 +40,7 @@ int main (int argc, char **argv)
 
 	// creer un contexte
 	clGetPlatformIDs (1, &gpu.platform, NULL);
-	clGetDeviceIDs (gpu.platform, CL_DEVICE_TYPE_CPU, 1, &gpu.device, NULL);
+	clGetDeviceIDs (gpu.platform, CL_DEVICE_TYPE_ALL, 1, &gpu.device, NULL);
 	gpu.context = clCreateContext (0, 1, &gpu.device, NULL, NULL, NULL);
 
 	//creer une file de commandes
