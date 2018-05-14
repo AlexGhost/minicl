@@ -6,7 +6,7 @@
 /*   By: acourtin <acourtin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/05/01 15:29:46 by acourtin          #+#    #+#             */
-/*   Updated: 2018/05/14 15:50:07 by acourtin         ###   ########.fr       */
+/*   Updated: 2018/05/14 16:39:11 by acourtin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,9 +21,10 @@ char	**readcl(char *source, int *i);
 
 typedef struct	s_cl
 {
-	cl_device_id	device;
-	cl_platform_id	platform;
-	cl_context		context;
+	cl_device_id		device;
+	cl_platform_id		platform;
+	cl_context			context;
+	cl_command_queue	queue;
 }				t_cl;
 
 // code du kernel
@@ -39,11 +40,11 @@ int main (int argc, char **argv)
 
 	// creer un contexte
 	clGetPlatformIDs (1, &gpu.platform, NULL);
-	clGetDeviceIDs (gpu.platform, CL_DEVICE_TYPE_ALL, 1, &gpu.device, NULL);
+	clGetDeviceIDs (gpu.platform, CL_DEVICE_TYPE_CPU, 1, &gpu.device, NULL);
 	gpu.context = clCreateContext (0, 1, &gpu.device, NULL, NULL, NULL);
 
 	//creer une file de commandes
-	cl_command_queue commandQueue = clCreateCommandQueue(gpu.context, gpu.device, 0, 0);
+	gpu.queue = clCreateCommandQueue(gpu.context, gpu.device, 0, 0);
 
 	// allouer et initialiser la memoire du device
 	double		av;
@@ -69,16 +70,16 @@ int main (int argc, char **argv)
 
 	// ajouter le kernel dans la file de commandes
 	size_t WorkSize[1] = { 1 };
-	clEnqueueNDRangeKernel (commandQueue, kernel, 1, 0, WorkSize, 0, 0, 0, 0);
+	clEnqueueNDRangeKernel (gpu.queue, kernel, 1, 0, WorkSize, 0, 0, 0, 0);
 
 	// recuperer les donnees calculees dans la memoire du device
-	clEnqueueReadBuffer (commandQueue, outputBufferDevice, CL_TRUE, 0,
+	clEnqueueReadBuffer (gpu.queue, outputBufferDevice, CL_TRUE, 0, \
 		sizeof (double), &ap, 0, NULL, NULL);
 
 	// liberer les ressources
 	clReleaseKernel (kernel);
 	clReleaseProgram (kernelProgram);
-	clReleaseCommandQueue (commandQueue);
+	clReleaseCommandQueue (gpu.queue);
 	clReleaseMemObject (inputBufferDevice);
 	clReleaseMemObject (outputBufferDevice);
 	clReleaseContext (gpu.context);
