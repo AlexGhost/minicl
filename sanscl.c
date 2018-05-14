@@ -6,7 +6,7 @@
 /*   By: acourtin <acourtin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/05/01 16:26:56 by acourtin          #+#    #+#             */
-/*   Updated: 2018/05/14 16:22:06 by acourtin         ###   ########.fr       */
+/*   Updated: 2018/05/14 17:17:40 by acourtin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,7 +15,7 @@
 #include <math.h>
 #include "libft/libft.h"
 
-void					add42(double *av, double *ap)
+void					alexatan(double *av, double *ap)
 {
 	size_t		i = 0;
 
@@ -32,7 +32,7 @@ int						main(void)
 	double		ap;
 
 	av = 42.f;
-	add42(&av, &ap);
+	alexatan(&av, &ap);
 	printf("sanscl :\tavant = %f\taprès = %f\n", av, ap);
 	return (0);
 }

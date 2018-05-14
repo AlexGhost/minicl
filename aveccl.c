@@ -6,7 +6,7 @@
 /*   By: acourtin <acourtin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/05/01 15:29:46 by acourtin          #+#    #+#             */
-/*   Updated: 2018/05/14 16:44:40 by acourtin         ###   ########.fr       */
+/*   Updated: 2018/05/14 16:56:14 by acourtin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,15 +27,23 @@ typedef struct	s_cl
 	cl_command_queue	queue;
 }				t_cl;
 
+typedef struct	s_program
+{
+	cl_mem		input;
+	cl_mem		output;
+	cl_program	program;
+	cl_kernel	kernel;
+	char		**source;
+}				t_program;
+
 // code du kernel
 int main (int argc, char **argv)
 {
-	char	**kernelSource;
+	int			i;
+	t_cl		gpu;
+	t_program	prog;
 
-	int		i;
-	t_cl	gpu;
-
-	if (!(kernelSource = readcl("script.cl", &i)))
+	if (!(prog.source = readcl("script.cl", &i)))
 		return (0);
 
 	// creer un contexte
@@ -50,42 +58,42 @@ int main (int argc, char **argv)
 	double		av;
 	double		ap;
 	av = 42.f;
-	cl_mem inputBufferDevice = clCreateBuffer (gpu.context, CL_MEM_READ_ONLY |
+	prog.input = clCreateBuffer (gpu.context, CL_MEM_READ_ONLY |
 		CL_MEM_COPY_HOST_PTR, sizeof(double), &av, 0);
-	cl_mem outputBufferDevice = clCreateBuffer (gpu.context, CL_MEM_WRITE_ONLY,
+	prog.output = clCreateBuffer (gpu.context, CL_MEM_WRITE_ONLY,
 		sizeof (double), 0, 0);
 
 	// charger et compiler le kernel ; i correspond aux lignes compris dans le script
-	cl_program kernelProgram = clCreateProgramWithSource (gpu.context, i,
-		(const char**)kernelSource, 0, 0);
-	clBuildProgram (kernelProgram, 0, NULL, NULL, NULL, NULL);
-	cl_kernel kernel = clCreateKernel (kernelProgram, "add42", NULL);
-	if (!kernel)
+	prog.program = clCreateProgramWithSource (gpu.context, i,
+		(const char**)prog.source, 0, 0);
+	clBuildProgram (prog.program, 0, NULL, NULL, NULL, NULL);
+	prog.kernel = clCreateKernel (prog.program, "alexatan", NULL);
+	if (!prog.kernel)
 	{
 		printf("!!! Erreur compilation du script OpenCL !!!\n");
 		exit(0);
 	}
-	clSetKernelArg (kernel, 0, sizeof (cl_mem), (void *) &inputBufferDevice);
-	clSetKernelArg (kernel, 1, sizeof (cl_mem), (void *) &outputBufferDevice);
+	clSetKernelArg (prog.kernel, 0, sizeof (cl_mem), (void *) &prog.input);
+	clSetKernelArg (prog.kernel, 1, sizeof (cl_mem), (void *) &prog.output);
 
 	// ajouter le kernel dans la file de commandes
 	size_t WorkSize[1] = { 1 };
-	clEnqueueNDRangeKernel (gpu.queue, kernel, 1, 0, WorkSize, 0, 0, 0, 0);
+	clEnqueueNDRangeKernel (gpu.queue, prog.kernel, 1, 0, WorkSize, 0, 0, 0, 0);
 
 	// recuperer les donnees calculees dans la memoire du device
-	clEnqueueReadBuffer (gpu.queue, outputBufferDevice, CL_TRUE, 0, \
+	clEnqueueReadBuffer (gpu.queue, prog.output, CL_TRUE, 0, \
 		sizeof (double), &ap, 0, NULL, NULL);
 
 	// liberer les ressources
-	clReleaseKernel (kernel);
-	clReleaseProgram (kernelProgram);
+	clReleaseKernel (prog.kernel);
+	clReleaseProgram (prog.program);
 	clReleaseCommandQueue (gpu.queue);
-	clReleaseMemObject (inputBufferDevice);
-	clReleaseMemObject (outputBufferDevice);
+	clReleaseMemObject (prog.input);
+	clReleaseMemObject (prog.output);
 	clReleaseContext (gpu.context);
 
 	printf("aveccl :\tavant = %f\taprès = %f\n", av, ap);
-	free(kernelSource);
+	free(prog.source);
 	exit(0);
 	return (0);
 }
