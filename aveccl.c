@@ -6,7 +6,7 @@
 /*   By: acourtin <acourtin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/05/01 15:29:46 by acourtin          #+#    #+#             */
-/*   Updated: 2018/05/10 19:55:24 by acourtin         ###   ########.fr       */
+/*   Updated: 2018/05/14 15:50:07 by acourtin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,60 +17,45 @@
 #include <stdlib.h>
 #include "libft/libft.h"
 
+char	**readcl(char *source, int *i);
+
+typedef struct	s_cl
+{
+	cl_device_id	device;
+	cl_platform_id	platform;
+	cl_context		context;
+}				t_cl;
+
 // code du kernel
 int main (int argc, char **argv)
 {
 	char	**kernelSource;
 
-	kernelSource = ft_memalloc(sizeof(char*) * 100);
-	int i;
-	int j;
-	int fd;
-	char *line;
-	i = 0;
-	while (i < 100)
-	{
-		kernelSource[i] = ft_memalloc(sizeof(char) * 100);
-		i++;
-	}
-	if ((fd = open("script.cl", O_RDONLY)) > 0)
-	{
-		j = 0;
-		while (get_next_line(fd, &line) == 1)
-		{
-			kernelSource[j] = ft_strdup(line);
-			j++;
-			ft_strdel(&line);
-		}
-	}
-	kernelSource[j] = 0;
-	/*i = 0;
-	while (kernelSource[i])
-	{
-		ft_putendl(kernelSource[i]);
-		i++;
-	}*/
+	int		i;
+	t_cl	gpu;
+
+	if (!(kernelSource = readcl("script.cl", &i)))
+		return (0);
+
 	// creer un contexte
-	cl_platform_id platform;
-	clGetPlatformIDs (1, &platform, NULL);
-	cl_device_id device;
-	clGetDeviceIDs (platform, CL_DEVICE_TYPE_ALL, 1, &device, NULL);
-	cl_context context = clCreateContext (0, 1, &device, NULL, NULL, NULL);
+	clGetPlatformIDs (1, &gpu.platform, NULL);
+	clGetDeviceIDs (gpu.platform, CL_DEVICE_TYPE_ALL, 1, &gpu.device, NULL);
+	gpu.context = clCreateContext (0, 1, &gpu.device, NULL, NULL, NULL);
 
 	//creer une file de commandes
-	cl_command_queue commandQueue = clCreateCommandQueue(context, device, 0, 0);
+	cl_command_queue commandQueue = clCreateCommandQueue(gpu.context, gpu.device, 0, 0);
 
 	// allouer et initialiser la memoire du device
 	double		av;
 	double		ap;
 	av = 42.f;
-	cl_mem inputBufferDevice = clCreateBuffer (context, CL_MEM_READ_ONLY |
+	cl_mem inputBufferDevice = clCreateBuffer (gpu.context, CL_MEM_READ_ONLY |
 		CL_MEM_COPY_HOST_PTR, sizeof(double), &av, 0);
-	cl_mem outputBufferDevice = clCreateBuffer (context, CL_MEM_WRITE_ONLY,
+	cl_mem outputBufferDevice = clCreateBuffer (gpu.context, CL_MEM_WRITE_ONLY,
 		sizeof (double), 0, 0);
 
-	// charger et compiler le kernel
-	cl_program kernelProgram = clCreateProgramWithSource (context, 4,
+	// charger et compiler le kernel ; i correspond aux lignes compris dans le script
+	cl_program kernelProgram = clCreateProgramWithSource (gpu.context, i,
 		(const char**)kernelSource, 0, 0);
 	clBuildProgram (kernelProgram, 0, NULL, NULL, NULL, NULL);
 	cl_kernel kernel = clCreateKernel (kernelProgram, "add42", NULL);
@@ -96,7 +81,7 @@ int main (int argc, char **argv)
 	clReleaseCommandQueue (commandQueue);
 	clReleaseMemObject (inputBufferDevice);
 	clReleaseMemObject (outputBufferDevice);
-	clReleaseContext (context);
+	clReleaseContext (gpu.context);
 
 	printf("aveccl :\tavant = %f\taprès = %f\n", av, ap);
 	free(kernelSource);
